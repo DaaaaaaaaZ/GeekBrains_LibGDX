@@ -10,7 +10,7 @@ public class DesktopLauncher {
 		config.height = 600;
 		config.width = 400;
 		config.resizable = false;
-		config.title = "Lesson 1";
+		config.title = "Lesson 3";
 		new LwjglApplication(new StarGame(), config);
 	}
 }
