@@ -1,142 +1,199 @@
 package dz.geekbrains.libgdx.sprites;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import dz.geekbrains.libgdx.math.Rect;
+import dz.geekbrains.libgdx.pool.BulletPool;
 
 public class Ship extends BaseSprite {
+
     private final float HEIGHT = 0.15f;
-    private final float PADDING = 0.01f;
-    private final float VEL_SHIP = 0.003f;
+    private final float BOTTOM_MARGIN = 0.05f;
+    private final int INVALID_POINTER = -1;
+    private final float SHOOT_DELAY = 0.2f;
 
-    private boolean leftPressed = false;
-    private boolean rightPressed = false;
+    private final Vector2 v0 = new Vector2(0.5f, 0);
+    private final Vector2 v = new Vector2();
 
-    private Vector2 posShip; //Позиция корабля
-    private Vector2 velShip; //Вектор скорости
-    private Vector2 posTarget; //Место, куда надо лететь
-    private Vector2 posTouch; //Место тыка мышью
-    private Vector2 posDist; //Линия полёта (будем измерять её длину)
+    private final BulletPool bulletPool;
+    private final TextureRegion bulletRegion;
+    private final Vector2 bulletV;
+    private final Vector2 bulletPos;
+    private final float bulletHeight;
+    private final int bulletDamage;
 
-    public Ship(TextureAtlas atlas) {
-        super(atlas.findRegion("main_ship"));
-        init ();
-    }
+    private float shootDelay;
+    private boolean autoShootOn = false;
 
-    private void init () {
-        //Раскатываем двумерный массив в одномерный
-        TextureRegion [][] tempRegion = this.regions[0].split(this.regions[0].getRegionWidth() / 2,
-                this.regions[0].getRegionHeight());
-        this.regions = new TextureRegion[tempRegion.length * tempRegion [0].length];
-        for (int j = 0; j < tempRegion.length; j++) {
-            for (int i = 0; i < tempRegion[0].length; i++) {
-                this.regions[j * tempRegion [0].length + i] = tempRegion[j][i];
-            }
-        }
+    private boolean pressedLeft;
+    private boolean pressedRight;
 
-        //Создаем векторы
-        posShip = new Vector2(0, 0);
-        velShip = new Vector2(0, 0);
-        posTarget = new Vector2(0, 0);
-        posTouch = new Vector2(0, 0);
-        posDist = new Vector2(0, 0);
+    private int leftPointer = INVALID_POINTER;
+    private int rightPointer = INVALID_POINTER;
+
+    private Rect worldBounds;
+    
+    private Sound shipBulletSound;
+
+    public Ship(TextureAtlas atlas, BulletPool bulletPool) {
+        super(atlas.findRegion("main_ship"), 1, 2, 2);
+        this.bulletPool = bulletPool;
+        bulletRegion = atlas.findRegion("bulletMainShip");
+        bulletV = new Vector2(0, 0.5f);
+        bulletPos = new Vector2();
+        bulletHeight = 0.01f;
+        bulletDamage = 1;
+        this.shipBulletSound = Gdx.audio.newSound(Gdx.files.internal("sounds/bullet.wav"));
     }
 
     @Override
     public void resize(Rect worldBounds) {
-        super.resize(worldBounds);
+        this.worldBounds = worldBounds;
         setHeightProportion(HEIGHT);
-        setLeft(0 - getHalfWidth());
-        setBottom(worldBounds.getBottom() + PADDING);
-        posShip.x = -getHalfWidth();
-        posTarget.x = -getHalfWidth();
+        setBottom(worldBounds.getBottom() + BOTTOM_MARGIN);
     }
 
     @Override
     public void update(float delta) {
-        if (leftPressed) {
-            if (Math.abs(worldBounds.getLeft() - posShip.x) > VEL_SHIP) {
-                posTarget.x -= VEL_SHIP;
-                velShip.x = -VEL_SHIP;
-            } else {
-                posTarget.x = worldBounds.getLeft();
-                velShip.x = -Math.abs(posTarget.x - posShip.x);
-            }
+        if (!v.isZero()) {
+            pos.mulAdd(v, delta);
         }
 
-        if (rightPressed) {
-            if (Math.abs(worldBounds.getRight() - getRight()) > VEL_SHIP) {
-                posTarget.x += VEL_SHIP;
-                velShip.x = VEL_SHIP;
-            } else {
-                posTarget.x = Math.abs (worldBounds.getRight() - getWidth());
-                System.out.println("worldBounds.getRight() = " + worldBounds.getRight() +
-                        "getHalfWidth() = " + getHalfWidth());
-                velShip.x = Math.abs(posTarget.x - posShip.x);
-                System.out.println("posShip.x = " + posShip.x);
-            }
+        if (getRight() > worldBounds.getRight()) {
+            setRight(worldBounds.getRight());
+            stop();
+        }
+        if (getLeft() < worldBounds.getLeft()) {
+            setLeft(worldBounds.getLeft());
+            stop();
         }
 
-        if (Math.abs (posTarget.x - posShip.x) < 0.00001f) { //Если квадрат длины меньше 0.00001, то останавливаем корабль
-            velShip.set (0, 0);
-            posShip.x = posTarget.x;
-            posShip.y = 0;
+        if (autoShootOn) {
+            shoot(delta);
         }
-        posShip.x+= velShip.x;
+
+//        if (getLeft() > worldBounds.getRight()) {
+//            setRight(worldBounds.getLeft());
+//        }
+//        if (getRight() < worldBounds.getLeft()) {
+//            setLeft(worldBounds.getRight());
+//        }
+    }
+
+    private void shoot(float delta) {
+        if (shootDelay > SHOOT_DELAY) {
+            shoot ();
+            shootDelay = 0.0f;
+        } else {
+            shootDelay += delta;
+        }
     }
 
     @Override
     public boolean touchDown(Vector2 touch, int pointer, int button) {
-        posTarget.x = touch.x  - getHalfWidth();
-        posTouch.set (posTarget);
-        posTouch.sub (posShip);
-        velShip.set (posTouch);
-        velShip.nor();
-
-        //Любое перемещение разбивается на 40 частей
-        //Большое расстояние летим быстрее, маленькое - медленнее
-        velShip.scl (posTouch.len() / 40);
-        velShip.y = 0;
-        System.out.println("velShip: " + velShip.x + "; " + velShip.y);
-        return false;
-    }
-
-    @Override
-    public boolean keyDown(int key) {
-        //Input.Keys.LEFT;
-        //Input.Keys.RIGHT;
-        if (Input.Keys.LEFT == key) {
-            leftPressed = true;
+        if (button == Input.Buttons.RIGHT) {
+            startAndStopAutoShoot ();
         }
 
-        if (Input.Keys.RIGHT == key) {
-            rightPressed = true;
-        }
-
-        System.out.println("posShip: " + posShip.x + "; " + posShip.y);
-        System.out.println("left, right: " + getLeft() + "; " + getRight());
-        return false;
-    }
-
-    @Override
-    public boolean keyUp(int key) {
-        if (Input.Keys.LEFT == key) {
-            leftPressed = false;
-        }
-        if (Input.Keys.RIGHT == key) {
-            rightPressed = false;
+        if (button == Input.Buttons.LEFT) {
+            if (touch.x < pos.x) {
+                moveLeft();
+            } else {
+                moveRight();
+            }
         }
         return false;
     }
 
+    private void startAndStopAutoShoot() {
+        if (autoShootOn) {
+            autoShootOn = false;
+            shootDelay = 0.0f;
+        } else {
+            autoShootOn = true;
+        }
+    }
+
     @Override
-    public void draw(SpriteBatch batch) {
-        //frame = 1;
-        setLeft(posShip.x);
-        super.draw(batch);
+    public boolean touchUp(Vector2 touch, int pointer, int button) {
+        switch (button) {
+            case Input.Buttons.LEFT:
+                stop();
+                break;
+            /*case Input.Buttons.RIGHT:
+                autoShootOn = false;
+                break;*/
+            }
+        return false;
+    }
+
+    public boolean keyDown(int keycode) {
+        switch (keycode) {
+            case Input.Keys.A:
+            case Input.Keys.LEFT:
+                pressedLeft = true;
+                moveLeft();
+                break;
+            case Input.Keys.D:
+            case Input.Keys.RIGHT:
+                pressedRight = true;
+                moveRight();
+                break;
+            case Input.Keys.UP:
+                startAndStopAutoShoot ();
+                break;
+        }
+        return false;
+    }
+
+    public boolean keyUp(int keycode) {
+        switch (keycode) {
+            case Input.Keys.A:
+            case Input.Keys.LEFT:
+                pressedLeft = false;
+                if (pressedRight) {
+                    moveRight();
+                } else {
+                    stop();
+                }
+                break;
+            case Input.Keys.D:
+            case Input.Keys.RIGHT:
+                pressedRight = false;
+                if (pressedLeft) {
+                    moveLeft();
+                } else {
+                    stop();
+                }
+                break;
+        }
+        return false;
+    }
+
+    private void moveRight() {
+        v.set(v0);
+    }
+
+    private void moveLeft() {
+        v.set(v0).rotateDeg(180);
+    }
+
+    private void stop() {
+        v.setZero();
+    }
+
+    private void shoot() {
+        shipBulletSound.play(0.03f);
+        Bullet bullet = bulletPool.obtain();
+        bulletPos.set(pos.x, pos.y + getHalfHeight());
+        bullet.set(this, bulletRegion, bulletPos, bulletV, bulletHeight, worldBounds, bulletDamage);
+    }
+
+    public void dispose() {
+        shipBulletSound.dispose();
     }
 }
