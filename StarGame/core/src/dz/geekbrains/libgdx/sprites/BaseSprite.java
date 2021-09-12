@@ -1,6 +1,7 @@
 package dz.geekbrains.libgdx.sprites;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import dz.geekbrains.libgdx.math.Rect;
@@ -11,6 +12,7 @@ public class BaseSprite extends Rect {
     protected float scale = 1;
     protected TextureRegion[] regions;
     protected int frame;
+    protected Rect worldBounds;
 
     public BaseSprite(TextureRegion region) {
         regions = new TextureRegion[1];
@@ -24,7 +26,7 @@ public class BaseSprite extends Rect {
     }
 
     public void resize(Rect worldBounds) {
-
+        this.worldBounds = worldBounds;
     }
 
     public void update(float delta) {
@@ -36,6 +38,14 @@ public class BaseSprite extends Rect {
     }
 
     public boolean touchUp(Vector2 touch, int pointer, int button) {
+        return false;
+    }
+
+    public boolean keyDown (int key) {
+        return false;
+    }
+
+    public boolean keyUp (int key) {
         return false;
     }
 
