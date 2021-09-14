@@ -1,6 +1,7 @@
 package dz.geekbrains.libgdx.math;
 
 import com.badlogic.gdx.math.Vector2;
+import dz.geekbrains.libgdx.sprites.Explosion;
 
 /**
  * Прямоугольник
@@ -57,10 +58,11 @@ public class Rect {
         return halfHeight * 2f;
     }
 
-    public void set(Rect from) {
+    public Explosion set(Rect from) {
         pos.set(from.pos);
         halfWidth = from.halfWidth;
         halfHeight = from.halfHeight;
+        return null;
     }
 
     public void setLeft(float left) {
@@ -102,6 +104,6 @@ public class Rect {
 
     @Override
     public String toString() {
-        return "Rectangle: pos" + pos + " size(" + getWidth() + ", " + getHeight() + ")";
+        return "Rect: pos" + pos + " size(" + getWidth() + ", " + getHeight() + ")";
     }
 }
