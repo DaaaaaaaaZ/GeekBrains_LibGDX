@@ -9,12 +9,12 @@ import com.badlogic.gdx.math.Vector2;
 import dz.geekbrains.libgdx.math.Rect;
 import dz.geekbrains.libgdx.pool.BulletPool;
 
-public class Ship extends BaseSprite {
+public class PlayerShip extends BaseShip {
 
-    private final float HEIGHT = 0.15f;
-    private final float BOTTOM_MARGIN = 0.05f;
-    private final int INVALID_POINTER = -1;
-    private final float SHOOT_DELAY = 0.2f;
+    private static final float HEIGHT = 0.15f;
+    private static final float BOTTOM_MARGIN = 0.05f;
+    private static final int INVALID_POINTER = -1;
+    private static final float SHOOT_DELAY = 0.2f;
 
     private final Vector2 v0 = new Vector2(0.5f, 0);
     private final Vector2 v = new Vector2();
@@ -39,7 +39,7 @@ public class Ship extends BaseSprite {
     
     private Sound shipBulletSound;
 
-    public Ship(TextureAtlas atlas, BulletPool bulletPool) {
+    public PlayerShip(TextureAtlas atlas, BulletPool bulletPool) {
         super(atlas.findRegion("main_ship"), 1, 2, 2);
         this.bulletPool = bulletPool;
         bulletRegion = atlas.findRegion("bulletMainShip");
@@ -47,7 +47,7 @@ public class Ship extends BaseSprite {
         bulletPos = new Vector2();
         bulletHeight = 0.01f;
         bulletDamage = 1;
-        this.shipBulletSound = Gdx.audio.newSound(Gdx.files.internal("sounds/bullet.wav"));
+        this.shipBulletSound = Gdx.audio.newSound(Gdx.files.internal("sounds/laser.wav"));
     }
 
     @Override
@@ -144,6 +144,7 @@ public class Ship extends BaseSprite {
                 moveRight();
                 break;
             case Input.Keys.UP:
+            case Input.Keys.W:
                 startAndStopAutoShoot ();
                 break;
         }
@@ -186,8 +187,9 @@ public class Ship extends BaseSprite {
         v.setZero();
     }
 
-    private void shoot() {
-        shipBulletSound.play(0.03f);
+    @Override
+    protected void shoot() {
+        shipBulletSound.play(0.1f);
         Bullet bullet = bulletPool.obtain();
         bulletPos.set(pos.x, pos.y + getHalfHeight());
         bullet.set(this, bulletRegion, bulletPos, bulletV, bulletHeight, worldBounds, bulletDamage);
