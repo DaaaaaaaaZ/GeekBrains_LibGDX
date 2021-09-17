@@ -56,6 +56,17 @@ public abstract class SpritesPool<T extends BaseSprite> {
         freeObjects.clear();
     }
 
+    public void restart () {
+        if (activeObjects.size() > 0) {
+            for (int i = 0; i < activeObjects.size(); i++) {
+                T sprite = activeObjects.get(i);
+                free(sprite);
+                i--;
+                sprite.flushDestroy();
+            }
+        }
+    }
+
     public List<T> getActiveObjects() {
         return activeObjects;
     }

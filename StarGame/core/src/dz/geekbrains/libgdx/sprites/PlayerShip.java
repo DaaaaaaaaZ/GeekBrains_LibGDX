@@ -15,6 +15,7 @@ public class PlayerShip extends BaseShip {
     private static final float BOTTOM_MARGIN = 0.05f;
     private static final int INVALID_POINTER = -1;
     private static final float SHOOT_DELAY = 0.2f;
+    private static final int HP = 1;
 
     private final Vector2 v0 = new Vector2(0.5f, 0);
     private final Vector2 v = new Vector2();
@@ -47,6 +48,7 @@ public class PlayerShip extends BaseShip {
         bulletPos = new Vector2();
         bulletHeight = 0.01f;
         bulletDamage = 1;
+        hp = HP;
         this.shipBulletSound = Gdx.audio.newSound(Gdx.files.internal("sounds/laser.wav"));
     }
 
@@ -76,6 +78,13 @@ public class PlayerShip extends BaseShip {
             shoot(delta);
         }
 
+        damageAnimateTimer += delta;
+        if (damageAnimateTimer >= DAMAGE_ANIMATE_INTERVAL) {
+            frame = 0;
+        }
+
+
+
 //        if (getLeft() > worldBounds.getRight()) {
 //            setRight(worldBounds.getLeft());
 //        }
@@ -91,6 +100,10 @@ public class PlayerShip extends BaseShip {
         } else {
             shootDelay += delta;
         }
+    }
+
+    private void setHP (int hp) {
+        this.hp = hp;
     }
 
     @Override
@@ -116,6 +129,15 @@ public class PlayerShip extends BaseShip {
         } else {
             autoShootOn = true;
         }
+    }
+
+    public boolean isCollision(Rect rect) {
+        return !(
+                rect.getRight() < getLeft()
+                        || rect.getLeft() > getRight()
+                        || rect.getBottom() > pos.y
+                        || rect.getTop() < getBottom()
+        );
     }
 
     @Override
@@ -193,6 +215,20 @@ public class PlayerShip extends BaseShip {
         Bullet bullet = bulletPool.obtain();
         bulletPos.set(pos.x, pos.y + getHalfHeight());
         bullet.set(this, bulletRegion, bulletPos, bulletV, bulletHeight, worldBounds, bulletDamage);
+    }
+
+    @Override
+    public void flushDestroy() {
+        super.flushDestroy();
+        stop();
+        pressedLeft = false;
+        pressedRight = false;
+        setHP(HP);
+    }
+
+    @Override
+    public void destroy(boolean isExploded) {
+        super.destroy(isExploded);
     }
 
     public void dispose() {
