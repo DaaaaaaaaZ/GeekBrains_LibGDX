@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import dz.geekbrains.libgdx.math.Rect;
-import dz.geekbrains.libgdx.pool.EnemyPool;
+import dz.geekbrains.libgdx.pools.EnemyPool;
 import dz.geekbrains.libgdx.sprites.EnemyShip;
 
 
@@ -52,6 +52,8 @@ public class EnemyEmitter {
 
     private final EnemyPool enemyPool;
 
+    private int level = 1;
+
     public EnemyEmitter(TextureAtlas atlas, EnemyPool enemyPool, Rect worldBounds) {
         this.enemyPool = enemyPool;
         this.worldBounds = worldBounds;
@@ -61,8 +63,11 @@ public class EnemyEmitter {
         bulletRegion = atlas.findRegion("bulletEnemy");
     }
 
-    public void generate(float delta) {
-        generateTimer += delta;
+    public void generate(float delta, int frags) {
+        if (level < 8) {
+            level = frags / 10 + 1;
+        }
+        generateTimer += delta * (1 + level / 2f);
         if (generateTimer >= GENERATE_INTERVAL) {
             generateTimer = 0f;
             EnemyShip enemyShip = enemyPool.obtain();
@@ -72,10 +77,10 @@ public class EnemyEmitter {
                         enemySmallRegions,
                         enemySmallV,
                         bulletRegion,
-                        ENEMY_SMALL_BULLET_HEIGHT,
+                        ENEMY_SMALL_BULLET_HEIGHT * (1 + level / 3f),
                         enemySmallBulletV,
                         ENEMY_SMALL_BULLET_DAMAGE,
-                        ENEMY_SMALL_RELOAD_INTERVAL,
+                        ENEMY_SMALL_RELOAD_INTERVAL / (1 + level / 10f),
                         bulletSound,
                         ENEMY_SMALL_HEIGHT,
                         ENEMY_SMALL_HP
@@ -85,10 +90,10 @@ public class EnemyEmitter {
                         enemyMediumRegions,
                         enemyMediumV,
                         bulletRegion,
-                        ENEMY_MEDIUM_BULLET_HEIGHT,
+                        ENEMY_MEDIUM_BULLET_HEIGHT * (1 + level / 4f),
                         enemyMediumBulletV,
                         ENEMY_MEDIUM_BULLET_DAMAGE,
-                        ENEMY_MEDIUM_RELOAD_INTERVAL,
+                        ENEMY_MEDIUM_RELOAD_INTERVAL / (1 + level / 5f),
                         bulletSound,
                         ENEMY_MEDIUM_HEIGHT,
                         ENEMY_MEDIUM_HP
@@ -98,10 +103,10 @@ public class EnemyEmitter {
                         enemyBigRegions,
                         enemyBigV,
                         bulletRegion,
-                        ENEMY_BIG_BULLET_HEIGHT,
+                        ENEMY_BIG_BULLET_HEIGHT * (1 + level / 5f),
                         enemyBigBulletV,
                         ENEMY_BIG_BULLET_DAMAGE,
-                        ENEMY_BIG_RELOAD_INTERVAL,
+                        ENEMY_BIG_RELOAD_INTERVAL / (1 + level / 12f),
                         bulletSound,
                         ENEMY_BIG_HEIGHT,
                         ENEMY_BIG_HP
@@ -117,5 +122,13 @@ public class EnemyEmitter {
 
     public void dispose () {
         bulletSound.dispose();
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public void flushLevel () {
+        level = 1;
     }
 }

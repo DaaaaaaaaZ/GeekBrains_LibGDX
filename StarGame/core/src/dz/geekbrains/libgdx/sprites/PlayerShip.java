@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import dz.geekbrains.libgdx.math.Rect;
-import dz.geekbrains.libgdx.pool.BulletPool;
+import dz.geekbrains.libgdx.pools.BulletPool;
 
 public class PlayerShip extends BaseShip {
 
@@ -15,7 +15,9 @@ public class PlayerShip extends BaseShip {
     private static final float BOTTOM_MARGIN = 0.05f;
     private static final int INVALID_POINTER = -1;
     private static final float SHOOT_DELAY = 0.2f;
-    private static final int HP = 1;
+    private static final int HP = 100;
+
+    private static final float MAX_SKEW_SHIP = 20f;
 
     private final Vector2 v0 = new Vector2(0.5f, 0);
     private final Vector2 v = new Vector2();
@@ -39,6 +41,14 @@ public class PlayerShip extends BaseShip {
     private Rect worldBounds;
     
     private Sound shipBulletSound;
+    private float skewShip = 0f;
+    private float increaseSkew = 1f;
+    private enum Direction {
+        LEFT,
+        RIGHT,
+        STOP
+    }
+    private Direction dir;
 
     public PlayerShip(TextureAtlas atlas, BulletPool bulletPool) {
         super(atlas.findRegion("main_ship"), 1, 2, 2);
@@ -50,6 +60,7 @@ public class PlayerShip extends BaseShip {
         bulletDamage = 1;
         hp = HP;
         this.shipBulletSound = Gdx.audio.newSound(Gdx.files.internal("sounds/laser.wav"));
+        dir = Direction.STOP;
     }
 
     @Override
@@ -59,11 +70,34 @@ public class PlayerShip extends BaseShip {
         setBottom(worldBounds.getBottom() + BOTTOM_MARGIN);
     }
 
-    @Override
-    public void update(float delta) {
+    public void update(float delta, int level) {
         if (!v.isZero()) {
             pos.mulAdd(v, delta);
         }
+
+        switch (dir) {
+            case LEFT: {
+                skewShip += increaseSkew * 3;
+                if (skewShip > MAX_SKEW_SHIP) {
+                    skewShip = MAX_SKEW_SHIP;
+                }
+            } break;
+            case RIGHT: {
+                skewShip -= increaseSkew * 3;
+                if (skewShip < -MAX_SKEW_SHIP) {
+                    skewShip = -MAX_SKEW_SHIP;
+                }
+            } break;
+            case STOP: {
+                if (skewShip > 0.1f) {
+                    skewShip -= increaseSkew;
+                } else if (skewShip < -0.1f) {
+                    skewShip += increaseSkew;
+                }
+            } break;
+        }
+
+        setAngle(skewShip);
 
         if (getRight() > worldBounds.getRight()) {
             setRight(worldBounds.getRight());
@@ -75,7 +109,7 @@ public class PlayerShip extends BaseShip {
         }
 
         if (autoShootOn) {
-            shoot(delta);
+            shoot(delta, level);
         }
 
         damageAnimateTimer += delta;
@@ -93,17 +127,21 @@ public class PlayerShip extends BaseShip {
 //        }
     }
 
-    private void shoot(float delta) {
+    private void shoot(float delta, int level) {
         if (shootDelay > SHOOT_DELAY) {
             shoot ();
             shootDelay = 0.0f;
         } else {
-            shootDelay += delta;
+            shootDelay += delta * (.2f + level / 4f);
         }
     }
 
     private void setHP (int hp) {
         this.hp = hp;
+    }
+
+    public int getHP () {
+        return hp;
     }
 
     @Override
@@ -199,21 +237,24 @@ public class PlayerShip extends BaseShip {
 
     private void moveRight() {
         v.set(v0);
+        dir = Direction.RIGHT;
     }
 
     private void moveLeft() {
         v.set(v0).rotateDeg(180);
+        dir = Direction.LEFT;
     }
 
     private void stop() {
         v.setZero();
+        dir = Direction.STOP;
     }
 
-    @Override
     protected void shoot() {
         shipBulletSound.play(0.1f);
         Bullet bullet = bulletPool.obtain();
-        bulletPos.set(pos.x, pos.y + getHalfHeight());
+        bulletPos.set(pos.x - skewShip / 600f, pos.y + getHalfHeight() * 0.8f);
+        bulletV.setAngleDeg(90 + skewShip * 2);
         bullet.set(this, bulletRegion, bulletPos, bulletV, bulletHeight, worldBounds, bulletDamage);
     }
 
@@ -224,6 +265,8 @@ public class PlayerShip extends BaseShip {
         pressedLeft = false;
         pressedRight = false;
         setHP(HP);
+        pos.x = 0f;
+        skewShip = 0f;
     }
 
     @Override

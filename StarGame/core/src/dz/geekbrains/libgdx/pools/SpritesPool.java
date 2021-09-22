@@ -1,4 +1,4 @@
-package dz.geekbrains.libgdx.pool;
+package dz.geekbrains.libgdx.pools;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dz.geekbrains.libgdx.sprites.BaseSprite;

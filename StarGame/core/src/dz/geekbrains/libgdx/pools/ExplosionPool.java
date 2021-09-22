@@ -1,4 +1,4 @@
-package dz.geekbrains.libgdx.pool;
+package dz.geekbrains.libgdx.pools;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;

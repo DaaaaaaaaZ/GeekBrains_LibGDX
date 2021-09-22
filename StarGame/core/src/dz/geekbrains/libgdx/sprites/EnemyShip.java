@@ -4,8 +4,7 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import dz.geekbrains.libgdx.math.Rect;
-import dz.geekbrains.libgdx.pool.BulletPool;
-import dz.geekbrains.libgdx.pool.ExplosionPool;
+import dz.geekbrains.libgdx.pools.BulletPool;
 
 public class EnemyShip extends BaseShip {
 

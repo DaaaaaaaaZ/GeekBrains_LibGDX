@@ -1,16 +1,15 @@
 package dz.geekbrains.libgdx.sprites;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import dz.geekbrains.libgdx.math.Rect;
-import dz.geekbrains.libgdx.pool.ExplosionPool;
+import dz.geekbrains.libgdx.pools.ExplosionPool;
 import dz.geekbrains.libgdx.utils.Regions;
 
 public class BaseSprite extends Rect {
 
-    protected float angle;
+    private float angle;
     protected float scale = 1;
     protected TextureRegion[] regions;
     protected int frame;

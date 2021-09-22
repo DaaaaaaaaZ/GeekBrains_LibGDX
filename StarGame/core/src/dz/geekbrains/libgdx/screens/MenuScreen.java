@@ -20,8 +20,6 @@ public class MenuScreen extends BaseScreen {
 
     private Texture texBg;
     private Background bg;
-    private TextureRegion regGameOver;
-    private BaseSprite gameOver;
 
     private TextureAtlas atlas;
     private Star stars [];
@@ -33,10 +31,6 @@ public class MenuScreen extends BaseScreen {
         this.game = game;
     }
 
-    public MenuScreen (Game game, boolean isGameOver) {
-        this.game = game;
-        this.isGameOver = isGameOver;
-    }
 
     @Override
     public boolean touchDown(Vector2 touch, int pointer, int button) {
@@ -59,13 +53,7 @@ public class MenuScreen extends BaseScreen {
         texBg = new Texture("Space.jpg");
         bg = new Background(texBg);
         atlas = new TextureAtlas("textures/menuAtlas.tpack");
-        if (isGameOver) {
-            regGameOver = new TextureAtlas("textures/mainAtlas.tpack").findRegion(
-                    "message_game_over");
-            gameOver = new BaseSprite(regGameOver);
-            gameOver.setHeightProportion(0.05f);
-            gameOver.setTop(0.1f);
-        }
+
         stars = new Star [STAR_COUNT];
         for (int i = 0; i < stars.length; i++) {
             stars[i] = new Star(atlas);
@@ -93,9 +81,6 @@ public class MenuScreen extends BaseScreen {
             stars[i].resize(worldBounds);
         }
 
-        if (gameOver != null) {
-            gameOver.resize(worldBounds);
-        }
         exitButton.resize(worldBounds);
         playButton.resize(worldBounds);
     }
@@ -112,9 +97,6 @@ public class MenuScreen extends BaseScreen {
             stars[i].draw (batch);
         }
 
-        if (gameOver != null) {
-            gameOver.draw(batch);
-        }
         exitButton.draw(batch);
         playButton.draw(batch);
     }
