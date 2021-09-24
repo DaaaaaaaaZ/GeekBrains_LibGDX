@@ -1,4 +1,4 @@
-package dz.geekbrains.libgdx.pool;
+package dz.geekbrains.libgdx.pools;
 
 
 import dz.geekbrains.libgdx.math.Rect;

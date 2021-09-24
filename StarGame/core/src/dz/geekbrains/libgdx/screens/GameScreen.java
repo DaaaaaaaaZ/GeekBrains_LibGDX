@@ -6,14 +6,15 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import dz.geekbrains.libgdx.buttons.NewGameButton;
+import dz.geekbrains.libgdx.fonts.BaseFont;
 import dz.geekbrains.libgdx.math.Rect;
-import dz.geekbrains.libgdx.pool.BulletPool;
-import dz.geekbrains.libgdx.pool.EnemyPool;
-import dz.geekbrains.libgdx.pool.ExplosionPool;
+import dz.geekbrains.libgdx.pools.BulletPool;
+import dz.geekbrains.libgdx.pools.EnemyPool;
+import dz.geekbrains.libgdx.pools.ExplosionPool;
 import dz.geekbrains.libgdx.sprites.*;
 import dz.geekbrains.libgdx.utils.EnemyEmitter;
 
@@ -21,6 +22,12 @@ import java.util.List;
 
 public class GameScreen extends BaseScreen {
     private static final int STAR_COUNT = 64;
+
+    private static final String FRAGS = "Frags: ";
+    private static final String HP = "HP: ";
+    private static final String LEVEL = "Level: ";
+
+    private static final float MARGIN = 0.01f;
 
     private Texture bg;
     private TextureAtlas atlas;
@@ -35,6 +42,12 @@ public class GameScreen extends BaseScreen {
     private EnemyPool enemyPool;
     private EnemyEmitter enemyEmitter;
     private ExplosionPool explosionPool;
+
+    private BaseFont font;
+    private StringBuilder sbFrags;
+    private StringBuilder sbHP;
+    private StringBuilder sbLevel;
+    private int frags;
 
     private final Game game;
     private Music backgroundMusic;
@@ -53,6 +66,12 @@ public class GameScreen extends BaseScreen {
         gameOver.setHeightProportion(0.07f);
         gameOver.setTop(0.1f);
 
+        font = new BaseFont("font/font.fnt", "font/font.png");
+        font.setSize(0.02f);
+        sbFrags = new StringBuilder();
+        sbHP = new StringBuilder();
+        sbLevel = new StringBuilder();
+
 
         background = new Background(bg);
         stars = new Star[STAR_COUNT];
@@ -67,16 +86,21 @@ public class GameScreen extends BaseScreen {
         enemyEmitter = new EnemyEmitter(atlas, enemyPool, worldBounds);
 
         ship = new PlayerShip(atlas, bulletPool);
-        newGame = new NewGameButton(atlas.findRegion("button_new_game"), ship);
+        newGame = new NewGameButton(atlas.findRegion("button_new_game"), ship, this);
 
         backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("sounds/music.mp3"));
         backgroundMusic.setLooping(true);
         try {
             backgroundMusic.play();
         } catch (GdxRuntimeException e) {
-            System.out.println("С третьего раза музыка пропадает");
+            //System.out.println("С третьего раза музыка пропадает");
         }
         ship.setExplosionPool (explosionPool);
+    }
+
+    public void deleteFrags () {
+        frags = 0;
+        enemyEmitter.flushLevel();
     }
 
     @Override
@@ -90,6 +114,7 @@ public class GameScreen extends BaseScreen {
 
         batch.begin();
         draw();
+        printInfo();
         batch.end();
     }
 
@@ -114,6 +139,9 @@ public class GameScreen extends BaseScreen {
                     if (enemyShip.isCollision(bullet)) {
                         enemyShip.damage(bullet.getDamage());
                         bullet.destroy(true);
+                        if (enemyShip.isDestroyed()) {
+                            frags++;
+                        }
                     }
                 }
             }
@@ -193,11 +221,11 @@ public class GameScreen extends BaseScreen {
         }
 
         if (!ship.isDestroyed()) {
-            ship.update(delta);
+            ship.update(delta, enemyEmitter.getLevel());
             bulletPool.updateActiveSprites(delta);
             enemyPool.updateActiveSprites(delta);
 
-            enemyEmitter.generate(delta);
+            enemyEmitter.generate(delta, frags);
         }
 
         explosionPool.updateActiveSprites(delta);
@@ -216,10 +244,6 @@ public class GameScreen extends BaseScreen {
         }
 
         if (ship.isDestroyed() && explosionPool.getActiveObjects().size() == 0) {
-            //Метод не сработал из-за исключения в 'Music'.play () на третьей попытке
-            //game.setScreen(new MenuScreen(game, true));
-
-            //Поэтому показываю кнопки в этом же Screen'e:
             gameOver.draw(batch);
             newGame.draw(batch);
             enemyPool.restart();
@@ -234,5 +258,14 @@ public class GameScreen extends BaseScreen {
         }
 
         explosionPool.drawActiveSprites(batch);
+    }
+
+    private void printInfo() {
+        sbFrags.setLength(0);
+        font.draw(batch, sbFrags.append(FRAGS).append(frags), worldBounds.getLeft() + MARGIN, worldBounds.getTop() - MARGIN);
+        sbHP.setLength(0);
+        font.draw(batch, sbHP.append(HP).append(ship.getHP()), worldBounds.pos.x, worldBounds.getTop() - MARGIN, Align.center);
+        sbLevel.setLength(0);
+        font.draw(batch, sbLevel.append(LEVEL).append(enemyEmitter.getLevel()), worldBounds.getRight() - MARGIN, worldBounds.getTop() - MARGIN, Align.right);
     }
 }

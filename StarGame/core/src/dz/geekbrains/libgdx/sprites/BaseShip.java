@@ -1,14 +1,11 @@
 package dz.geekbrains.libgdx.sprites;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import dz.geekbrains.libgdx.math.Rect;
-import dz.geekbrains.libgdx.pool.BulletPool;
-import dz.geekbrains.libgdx.pool.ExplosionPool;
-
-import static com.badlogic.gdx.Graphics.GraphicsType.LWJGL;
+import dz.geekbrains.libgdx.pools.BulletPool;
+import dz.geekbrains.libgdx.pools.ExplosionPool;
 
 public class BaseShip extends BaseSprite {
     protected static final float DAMAGE_ANIMATE_INTERVAL = 0.1f;
