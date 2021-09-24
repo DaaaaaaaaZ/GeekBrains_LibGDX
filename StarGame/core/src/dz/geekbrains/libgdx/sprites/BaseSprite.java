@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import dz.geekbrains.libgdx.math.Rect;
+import dz.geekbrains.libgdx.pool.ExplosionPool;
 import dz.geekbrains.libgdx.utils.Regions;
 
 public class BaseSprite extends Rect {
@@ -15,6 +16,7 @@ public class BaseSprite extends Rect {
     protected int frame;
     protected Rect worldBounds;
     private boolean destroyed;
+    protected static ExplosionPool explosionPool;
 
     public BaseSprite () {
 
@@ -35,12 +37,20 @@ public class BaseSprite extends Rect {
         setWidth(height * aspect);
     }
 
+    public void setExplosionPool (ExplosionPool expPool) {
+        explosionPool = expPool;
+    }
+
     public void resize(Rect worldBounds) {
         this.worldBounds = worldBounds;
     }
 
     public void update(float delta) {
 
+    }
+
+    public void setFirstFrame () {
+        frame = 0;
     }
 
     public boolean touchDown(Vector2 touch, int pointer, int button) {
@@ -89,6 +99,13 @@ public class BaseSprite extends Rect {
 
     public void destroy() {
         destroyed = true;
+    }
+
+    public void destroy (boolean isExploded) {
+        if (isExploded) {
+            explosionPool.obtain(this);
+        }
+        destroy ();
     }
 
     public void flushDestroy() {

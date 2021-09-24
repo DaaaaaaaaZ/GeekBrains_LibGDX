@@ -42,6 +42,11 @@ public class Bullet extends BaseSprite {
         }
     }
 
+    @Override
+    public void destroy(boolean isExploded) {
+        super.destroy(isExploded);
+    }
+
     public int getDamage() {
         return damage;
     }

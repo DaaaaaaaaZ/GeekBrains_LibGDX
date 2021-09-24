@@ -1,5 +1,6 @@
 package dz.geekbrains.libgdx.sprites;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
@@ -7,7 +8,11 @@ import dz.geekbrains.libgdx.math.Rect;
 import dz.geekbrains.libgdx.pool.BulletPool;
 import dz.geekbrains.libgdx.pool.ExplosionPool;
 
+import static com.badlogic.gdx.Graphics.GraphicsType.LWJGL;
+
 public class BaseShip extends BaseSprite {
+    protected static final float DAMAGE_ANIMATE_INTERVAL = 0.1f;
+
     protected ExplosionPool explosionPool;
 
     private static Rect playerShip;
@@ -28,6 +33,7 @@ public class BaseShip extends BaseSprite {
     protected Rect worldBounds;
 
     protected int hp;
+    protected float damageAnimateTimer = DAMAGE_ANIMATE_INTERVAL;
 
     public BaseShip() {
     }
@@ -53,18 +59,24 @@ public class BaseShip extends BaseSprite {
             pos.mulAdd(v, delta * 10);
         }
 
-        if (checkKamikaze ()) {
-            frame = 1;
-            explosionPool.obtain(this);
-            destroy();
+        damageAnimateTimer += delta;
+        if (damageAnimateTimer >= DAMAGE_ANIMATE_INTERVAL) {
+            frame = 0;
         }
     }
 
-    private boolean checkKamikaze() {
-        if (playerShip != null) {
-            return !(playerShip.isOutside(this));
+    public void damage(int damage) {
+        hp -= damage;
+        if (hp <= 0) {
+            hp = 0;
+            destroy(true);
         }
-        return false;
+        frame = 1;
+        damageAnimateTimer = 0f;
+    }
+
+    public int getBulletDamage() {
+        return bulletDamage;
     }
 
     protected void shoot() {

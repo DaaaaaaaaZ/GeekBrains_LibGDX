@@ -10,14 +10,11 @@ import dz.geekbrains.libgdx.pool.ExplosionPool;
 public class EnemyShip extends BaseShip {
 
 
-    public EnemyShip(BulletPool bulletPool, Rect worldBounds, ExplosionPool explosionPool) {
+    public EnemyShip(BulletPool bulletPool, Rect worldBounds) {
         this.bulletPool = bulletPool;
         this.worldBounds = worldBounds;
         this.bulletV = new Vector2();
         this.bulletPos = new Vector2();
-        if (this.explosionPool == null) {
-            this.explosionPool = explosionPool;
-        }
     }
 
     @Override
@@ -49,5 +46,15 @@ public class EnemyShip extends BaseShip {
         setHeightProportion(height);
         this.hp = hp;
         v.set(v0);
+    }
+
+
+    public boolean isCollision(Rect rect) {
+        return !(
+                rect.getRight() < getLeft()
+                        || rect.getLeft() > getRight()
+                        || rect.getBottom() > getTop()
+                        || rect.getTop() < pos.y
+        );
     }
 }

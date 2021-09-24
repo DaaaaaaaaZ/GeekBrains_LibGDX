@@ -10,7 +10,7 @@ import dz.geekbrains.libgdx.utils.Regions;
 
 public class ExplosionPool extends SpritesPool <Explosion>{
     private final TextureRegion [] textureRegions;
-    private final Sound exposionSound = Gdx.audio.newSound(Gdx.files.internal("sounds/explosion.wav"));
+    private final Sound explosionSound = Gdx.audio.newSound(Gdx.files.internal("sounds/explosion.wav"));
 
     public ExplosionPool (TextureAtlas atlas) {
         textureRegions = Regions.split(atlas.findRegion("explosion"), 9, 9, 74);
@@ -18,11 +18,12 @@ public class ExplosionPool extends SpritesPool <Explosion>{
 
     @Override
     protected Explosion newObject() {
-        return new Explosion(textureRegions, exposionSound);
+        return new Explosion(textureRegions, explosionSound);
     }
 
     public Explosion obtain(Rect rect) {
         Explosion tempExplosion = obtain();
+        tempExplosion.setFirstFrame();
         tempExplosion.set (rect);
         return tempExplosion;
     }
@@ -30,6 +31,6 @@ public class ExplosionPool extends SpritesPool <Explosion>{
     @Override
     public void dispose() {
         super.dispose();
-        exposionSound.dispose();
+        explosionSound.dispose();
     }
 }
